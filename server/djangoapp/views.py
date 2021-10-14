@@ -3,7 +3,9 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
+from .models import CarMake, CarModel
 # from .restapis import related methods
+from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf, post_request
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -34,13 +36,13 @@ def login_request(request):
     context = {}
     if request.method == "POST":
         username = request.POST['username']
-        password = request.POST['password']
+        password = request.POST['psw']
         user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
             return redirect('djangoapp:index')
         else:
-            context['message'] = "Invalid login credentials."
+            context['message'] = "Invalid username or password."
             return render(request, 'djangoapp/index.html', context)
     else:
         return render(request, 'djangoapp/index.html', context)
@@ -81,15 +83,8 @@ def registration_request(request):
 def get_dealerships(request):
     context = {}
     if request.method == "GET":
-        return render(request, 'djangoapp/index.html', context)
-
-
-# Create a `get_dealer_details` view to render the reviews of a dealer
-# Update the `get_dealerships` view to render the index page with a list of dealerships
-def get_dealerships(request):
-    context = {}
-    if request.method == "GET":
         url = "https://67a392c1.us-south.apigw.appdomain.cloud/api/dealerships"
+        # Get dealers from the URL
         dealerships = get_dealers_from_cf(url)
         context = {}
         context['dealerships'] = dealerships
@@ -101,7 +96,9 @@ def get_dealer_details(request, dealer_id):
     context = {}
     if request.method == "GET":
         url = "https://67a392c1.us-south.apigw.appdomain.cloud/api/reviews"
+        # Get dealers from the URL
         reviews = get_dealer_reviews_from_cf(url, dealer_id = dealer_id)
+        # Append to context
         context['reviews'] = reviews
         context['dealer_id'] = dealer_id
         # Return a list of dealer short name
